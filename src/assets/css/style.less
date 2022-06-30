@@ -1,0 +1,52 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+a{
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    list-style: none;
+}
+
+html{
+    background-color: #c4cbe0;
+    // background-image: url('../img/back1.jpg');
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+body{
+    font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+    font-size: 14px;
+    color: #303133;
+    
+}
+
+//panel-search
+.panel-search{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    .filter {
+      .el-button,
+      .el-select,
+      .el-input-number,
+      .el-input{
+        margin-right: 12px;
+      }
+    }
+  }
+
+  .panel-table{
+    width: 100%;
+    .el-table__row{
+      display: none;
+      &.visible{
+        display: table-row;
+      }
+    }
+  }
