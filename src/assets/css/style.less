@@ -50,3 +50,33 @@ body{
       }
     }
   }
+
+  // 头像上传框
+  .myupload{
+    display:inline-block;
+    .el-upload{
+      display: flex;
+      width: 100%;
+      height: 100%;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid #DCDFE6;
+      padding: 2px;
+      border-radius: 4px;
+      overflow: hidden;
+      cursor: pointer;
+      &:hover {
+        border-color: #C0C4CC;
+      }
+      img{
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      .el-icon-plus{
+        font-size: 24px;
+        color: #8c939d;
+      }
+    }
+  }

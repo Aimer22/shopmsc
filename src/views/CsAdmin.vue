@@ -26,7 +26,17 @@
           </el-form-item>
 
           <el-form-item label="头像" >
-            <el-input v-model="form.avatar" ></el-input>
+            <el-upload
+              class="myupload"
+              :on-success="uploadSuccess"
+              :before-upload="beforeUpload"
+              id="my_avatar"
+              action="http://cloud.scnew.com.cn/api/user/upload"
+              :headers="headers"
+              :auto-upload="true">
+              <img v-if="form.avatar" :src="form.avatar" style="width: 100px ; height: 100px">
+              <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+            </el-upload>
           </el-form-item>
 
           <el-form-item label="角色" prop="roleid">
@@ -46,6 +56,18 @@
         </div>
       </el-dialog>
       
+      <!-- 修改头像弹层 -->
+      <el-dialog title="修改头像" :visible.sync="openEditAvatar">
+        <el-form :model="form">
+          <!-- 插入上传头像组件 -->
+          <cs-avatar ref="my_avatar"></cs-avatar>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button type="danger" @click="openEditAvatar= false">取 消</el-button>
+          <el-button type="primary" @click="uploadConfirm">确 定</el-button>
+        </div>
+      </el-dialog>
+
       <div class="panel-search">
         <div class="filter">
             <el-button 
@@ -93,10 +115,15 @@
         </el-table-column>
         <el-table-column
           label="头像"
-          prop="avatar"
           v-slot="scope"
+          ref='ownavatar'
           width="100">
-           <el-avatar :size="40" :src="scope.row.avatar" fit="contain"></el-avatar>
+           <el-avatar 
+           :size="45"
+           :src="require('../../server/public/images/6HEnA6vxKXh4JEcSya2-QEKd.jpg')"
+           @click.native="editAvatar( scope.row.avatar )" 
+           fit="contain"  
+           alt=""></el-avatar>
         </el-table-column>
         <el-table-column
           prop="username"
@@ -180,6 +207,7 @@ export default {
         },
         // 控制弹框显示
         visible: false,
+        openEditAvatar: false,
         // 修改动作标识
         action: 'add',
         // 收集数据
@@ -189,7 +217,15 @@ export default {
           mobile: {required: true, message:'手机不能为空'},
           roleid: {required: true, message:'请选择角色'}
         },
-        roles: []
+        roles: [],
+        // 存放上传头像组件的数据
+        avatarList:{
+          avatarid: '',
+          // 后台返回的图片地址
+          avatarPath:''
+        },
+        // 头像上传信息
+        headers:{'SC-Token': 'eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiIyOSIsImF1ZCI6InRlc3QiLCJpYXQiOjE2MTg0NzU3MjQsInJvbGVzIjoiNCIsImV4cCI6MTk3ODQ3NTcyNH0.19x5PJCUsO6PEX5verFFmuPpQYMkxsShoTRkvW2w_2w'}
       };
     },
     computed:{
@@ -204,7 +240,7 @@ export default {
     },
     created(){
         this.read()
-        this.findRoles()
+        // this.findRoles()
     },
 
     methods: {
@@ -214,18 +250,28 @@ export default {
           if(res.result.err > 0){
             this.$message.error(res.desc)
           }else{
+            console.log(res);
               this.tableData = res.result;
           }
-
-          // 数据库获取数据
-          /* if(res.err > 0){
-            this.$message.error('获取数据失败')
-          }else{
-            this.tableData = res.result
-          }
-          console.log(res.result); */
-          
         })
+          // 数据库获取数据
+          /* this.$http.get('http://localhost:3030/getUser').then( res => {
+            if(res.err > 0){
+              this.$message.error('获取数据失败')
+            }else{
+              this.tableData = res.result
+              // 将所有的头像地址设置成项目相对地址
+              this.tableData.map(item => {
+                if(item.avatar){
+                  return item.avatar = 'http://localhost:3030'+item.avatar.split('public')[1];
+                  
+                }
+                
+              })
+            }
+            console.log(this.tableData);
+          
+        }) */
       },
       rowClassName( {rowIndex} ){
         return { visible: rowIndex >= this.condition.start() && rowIndex < this.condition.end()}
@@ -256,11 +302,13 @@ export default {
             this.$message.success( '状态已改变')
           }
         })
-        /* this.$http.post('http://localhost:3030/changeState', { id, state }).then(res => {
+        console.log({id, state});
+        // 数据获取数据
+       /*  this.$http.post('http://localhost:3030/changeState', {id, state}).then(res => {
           if(res.err >0 ){
-            this.$message.error( res.desc);
+            this.$message.error( '执行错误');
           }else{
-            this.$message.success( '状态已改变')
+            this.$message.success( res.desc)
           }
           console.log(res);
         }) */
@@ -281,7 +329,7 @@ export default {
           if(valid){
             this.$http.post('admin/'+this.action, this.form).then(res => {
               if(res.err > 0){
-                this.message.error( res.desc )
+                this.$message.error( res.desc )
               }else{
                 this.read();
                 this.$message.success( res.desc)
@@ -295,12 +343,56 @@ export default {
       findRoles(){
         this.$http.get('role/list').then(res=> {
           if(res.err > 0){
-                this.message.error( res.desc )
+                this.$message.error( res.desc )
               }else{
                 this.roles = res.result
               }
         })
-      }
+      },
+      editAvatar( {id}  ){
+        this.openEditAvatar = true
+        this.avatarList.avatarid = id;
+      },
+      // 确认上传头像
+      uploadConfirm(){
+        let param = new FormData()
+        console.log(this.$refs.my_avatar.filelist[0]);
+        
+        this.$refs.my_avatar.filelist.forEach(item => {
+          console.log(item.raw);
+          param.append('file', item.raw)
+        })
+        param.append('avatarid',this.avatarList.avatarid)
+        this.$http.post('http://localhost:3030/uploadAvatar', param).then(res => {
+          if(res.err > 0){
+            this.$message.error(res.desc)
+          }else{
+            console.log(res.avatarImg);
+            this.avatarList.avatarPath = this.avatarImg
+            this.$message.success('保存成功！')
+          }
+        })
+        
+        
+        
+      },
+      beforeUpload( file ){
+         const ext = file.type.split('/')[1].toLowerCase();
+          const isPic = ['jpeg', 'png', 'gif', 'jpg', 'webp']
+          const isLt2M = file.size / 1024 / 1024 < 2
+          if ( !isPic.includes(ext) ) this.$message.error('上传图片只能是 ' + isPic + ' 格式!')
+          if ( !isLt2M ) this.$message.error('上传图片大小不能超过 2MB!')
+          return isPic && isLt2M
+      },
+      uploadSuccess( res ) {
+        if ( res.err > 0 ) {
+          this.$message.error( res.desc )
+        } else {
+          console.log('1111');
+          this.$message.success( res.desc )
+          this.$set(this.form, 'avatar', res.result)
+        }
+      },
     },
     
 }

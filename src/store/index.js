@@ -42,7 +42,11 @@ const store = new Vuex.Store({
           { id: 32, name: '产品列表', path: '/control/product' }
         ]
       }
-              ],
+      ],
+      // 用于存放头像数据
+      /* avatarList: [
+
+      ] */
   },
   mutations:{
     saveUserInfo( state, payload){
